@@ -29,8 +29,8 @@ class Yolov5:
                 hide_labels=False,  # hide labels
                 hide_conf=False,  # hide confidences
                 augment=False, # augmented inference
-                agnostic_nms=False  # class-agnostic NMS
-                ):
+                agnostic_nms=False,  # class-agnostic NMS
+                return_annotated_img:bool = True):
 
         self._imgsz = imgsz
         self._conf_thres = conf_thres
@@ -44,6 +44,7 @@ class Yolov5:
         self._agnostic_nms = agnostic_nms
         self._hide_labels = hide_labels
         self._hide_conf = hide_conf
+        self._return_anno_img_ = return_annotated_img
         
         # Initialize
         # set_logging()
@@ -92,6 +93,9 @@ class Yolov5:
         # Apply Non-Maximum Supression (NMS)
         pred = non_max_suppression(pred, self._conf_thres, self._iou_thres, self._classes, self._agnostic_nms, max_det=self._max_det)
 
+        # List of detected class names in same order as pred (n,6)
+        detected_cls_names = []
+
         for i, det in enumerate(pred):  # detections per image
             
             if len(det):
@@ -102,6 +106,13 @@ class Yolov5:
                     # Add bbox to image
                     c = int(cls)  # integer class
                     label = None if self._hide_labels else (self._names[c] if self._hide_conf else f'{self._names[c]} {conf:.2f}')
-                    plot_one_box(xyxy, result_img, label=label, color=colors(c, True), line_thickness=self._line_thickness)
+                    detected_cls_names.append(label.split(' ')[0])
+                    if self._return_anno_img_:
+                        plot_one_box(xyxy, result_img, label=label, color=colors(c, True), line_thickness=self._line_thickness)
 
-        return result_img
+        if self._return_anno_img_:
+            return result_img, pred, detected_cls_names
+        else:
+            return None, pred, detected_cls_names
+
+
