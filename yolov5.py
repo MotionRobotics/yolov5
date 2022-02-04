@@ -95,6 +95,7 @@ class Yolov5:
 
         # List of detected class names in same order as pred (n,6)
         detected_cls_names = []
+        detection_conf = []
 
         for i, det in enumerate(pred):  # detections per image
             
@@ -107,12 +108,13 @@ class Yolov5:
                     c = int(cls)  # integer class
                     label = None if self._hide_labels else (self._names[c] if self._hide_conf else f'{self._names[c]} {conf:.2f}')
                     detected_cls_names.append(label.split(' ')[0])
+                    detection_conf.append(conf.cpu().detach().numpy().item())
                     if self._return_anno_img_:
                         plot_one_box(xyxy, result_img, label=label, color=colors(c, True), line_thickness=self._line_thickness)
 
         if self._return_anno_img_:
-            return result_img, pred, detected_cls_names
+            return result_img, pred, detected_cls_names, detection_conf
         else:
-            return None, pred, detected_cls_names
+            return None, pred, detected_cls_names, detection_conf
 
 
